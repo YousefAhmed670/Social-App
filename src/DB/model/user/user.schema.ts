@@ -1,6 +1,6 @@
 import { Schema } from "mongoose";
 import { IUser } from "../../../utilities/common/interface";
-import { GENDER, SYS_ROLE, USER_AGENT } from "../../../utilities/common/enum";
+import * as utilities from "../../../utilities";
 
 const userSchema = new Schema<IUser>(
   {
@@ -29,7 +29,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       minLength: 6,
       required: function () {
-        if (this.userAgent === USER_AGENT.Google) {
+        if (this.userAgent === utilities.USER_AGENT.Google) {
           return false;
         }
         return true;
@@ -37,9 +37,21 @@ const userSchema = new Schema<IUser>(
     },
     credentialUpdatedAt: Date,
     phoneNumber: String,
-    role: { type: String, enum: SYS_ROLE, default: SYS_ROLE.User },
-    gender: { type: String, enum: GENDER, default: GENDER.Male },
-    userAgent: { type: String, enum: USER_AGENT, default: USER_AGENT.Local },
+    role: {
+      type: Number,
+      enum: utilities.SYS_ROLE,
+      default: utilities.SYS_ROLE.User,
+    },
+    gender: {
+      type: Number,
+      enum: utilities.GENDER,
+      default: utilities.GENDER.Male,
+    },
+    userAgent: {
+      type: Number,
+      enum: utilities.USER_AGENT,
+      default: utilities.USER_AGENT.Local,
+    },
     otp: String,
     otpExpireAt: Date,
     isVerified: { type: Boolean, default: false },
@@ -57,3 +69,14 @@ userSchema
   });
 
 export default userSchema;
+
+userSchema.pre("save", async function (next) {
+  if (this.userAgent != utilities.USER_AGENT.Google && this.isNew) {
+    utilities.eventEmitter.emit("userRegistered", {
+      email: this.email,
+      otp: this.otp,
+    });
+    this.otp = await utilities.generateHash(this.otp as string);
+  }
+  next();
+});

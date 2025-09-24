@@ -1,7 +1,40 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const enum_1 = require("../../../utilities/common/enum");
+const utilities = __importStar(require("../../../utilities"));
 const userSchema = new mongoose_1.Schema({
     firstName: {
         type: String,
@@ -28,7 +61,7 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         minLength: 6,
         required: function () {
-            if (this.userAgent === enum_1.USER_AGENT.Google) {
+            if (this.userAgent === utilities.USER_AGENT.Google) {
                 return false;
             }
             return true;
@@ -36,9 +69,21 @@ const userSchema = new mongoose_1.Schema({
     },
     credentialUpdatedAt: Date,
     phoneNumber: String,
-    role: { type: String, enum: enum_1.SYS_ROLE, default: enum_1.SYS_ROLE.User },
-    gender: { type: String, enum: enum_1.GENDER, default: enum_1.GENDER.Male },
-    userAgent: { type: String, enum: enum_1.USER_AGENT, default: enum_1.USER_AGENT.Local },
+    role: {
+        type: Number,
+        enum: utilities.SYS_ROLE,
+        default: utilities.SYS_ROLE.User,
+    },
+    gender: {
+        type: Number,
+        enum: utilities.GENDER,
+        default: utilities.GENDER.Male,
+    },
+    userAgent: {
+        type: Number,
+        enum: utilities.USER_AGENT,
+        default: utilities.USER_AGENT.Local,
+    },
     otp: String,
     otpExpireAt: Date,
     isVerified: { type: Boolean, default: false },
@@ -53,3 +98,13 @@ userSchema
     this.lastName = value.split(" ")[1];
 });
 exports.default = userSchema;
+userSchema.pre("save", async function (next) {
+    if (this.userAgent != utilities.USER_AGENT.Google && this.isNew) {
+        utilities.eventEmitter.emit("userRegistered", {
+            email: this.email,
+            otp: this.otp,
+        });
+        this.otp = await utilities.generateHash(this.otp);
+    }
+    next();
+});

@@ -24,11 +24,6 @@ class AuthService {
       throw new utilities.ConflictException("User already exists");
     }
     const user = await this.authFactoryService.registerFactory(registerDto);
-    utilities.eventEmitter.emit("userRegistered", {
-      email: user.email,
-      otp: user.otp,
-    });
-    user.otp = await utilities.generateHash(user.otp);
     const createdUser = await this.userRepository.create(user);
     return res.status(201).json({
       message: "User created successfully",

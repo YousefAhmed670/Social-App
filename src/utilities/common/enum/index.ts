@@ -1,17 +1,17 @@
 export enum SYS_ROLE {
-  User = "user",
-  Admin = "admin",
-  SuperAdmin = "superAdmin",
+  User,
+  Admin,
+  SuperAdmin,
 }
 export enum GENDER {
-  Male = "male",
-  Female = "female",
+  Male,
+  Female,
 }
 export enum USER_AGENT {
-  Local = "local",
-  Google = "google",
+  Local,
+  Google,
 }
 export enum TOKEN_TYPE {
-  Refresh = "refresh",
-  Access = "access",
+  Access,
+  Refresh,
 }
