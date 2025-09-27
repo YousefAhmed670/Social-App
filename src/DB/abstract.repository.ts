@@ -5,13 +5,14 @@ import {
   QueryOptions,
   RootFilterQuery,
   UpdateQuery,
+  Document,
 } from "mongoose";
 
 export default abstract class AbstractRepository<T> {
   constructor(protected model: Model<T>) {}
-  async create(item:Partial<T>) {
+  async create(item:Partial<T>):Promise<T&Document> {
     const doc = new this.model(item);
-    return await doc.save();
+    return (await doc.save()) as unknown as T&Document;
   }
   async getOne(
     filter: RootFilterQuery<T>,

@@ -2,6 +2,7 @@ import { Router } from "express";
 import authService from "./auth.service";
 import * as authValidation from "./auth.validation";
 import { isValid } from "../../middleware";
+import { isAuthenticated } from "../../middleware/auth.middleware";
 const router = Router();
 
 router.post(
@@ -21,5 +22,6 @@ router.put(
   isValid(authValidation.resetPasswordSchema),
   authService.resetPassword
 );
-
+router.post("/refresh-token", authService.refreshToken);
+router.put("/logout",isAuthenticated, authService.logout);
 export default router;

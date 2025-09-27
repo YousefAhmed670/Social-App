@@ -9,6 +9,7 @@ import { AuthFactoryService } from "./factory";
 import * as utilities from "../../utilities";
 import { TokenRepository, UserRepository } from "../../DB";
 import { AuthProvider } from "./provider";
+import { OAuth2Client } from "google-auth-library";
 class AuthService {
   private readonly userRepository = new UserRepository();
   private readonly tokenRepository = new TokenRepository();
@@ -97,12 +98,22 @@ class AuthService {
     if (!userExist.isVerified) {
       throw new utilities.BadRequestException("User not verified");
     }
-    const accessToken = utilities.generateToken(userExist._id.toString());
-    const refreshToken = utilities.generateRefreshToken(
-      userExist._id.toString()
-    );
+    const accessToken = utilities.generateToken({
+      payload: {
+        _id: userExist._id,
+        userAgent: userExist.userAgent,
+        role: userExist.role,
+      },
+    });
+    const refreshToken = utilities.generateRefreshToken({
+      payload: {
+        _id: userExist._id,
+        userAgent: userExist.userAgent,
+        role: userExist.role,
+      },
+    });
     await this.tokenRepository.create({
-      userId: userExist._id.toString(),
+      userId: userExist._id,
       token: refreshToken,
       type: utilities.TOKEN_TYPE.Refresh,
     });
@@ -128,6 +139,58 @@ class AuthService {
     );
     return res.status(200).json({
       message: "Password reset successfully",
+      success: true,
+    });
+  };
+
+  refreshToken = async (req: Request, res: Response) => {
+    const refreshToken = req.headers.refreshtoken;
+    const payload = utilities.verifyRefreshToken(refreshToken as string);
+    const user = await this.userRepository.exists({
+      _id: payload._id,
+    });
+    if (!user) {
+      throw new utilities.NotFoundException("User not found");
+    }
+    const accessToken = utilities.generateToken({
+      payload: {
+        _id: user._id,
+        userAgent: utilities.USER_AGENT.Google,
+        role: utilities.SYS_ROLE.User,
+      },
+    });
+    const newRefreshToken = utilities.generateRefreshToken({
+      payload: {
+        _id: user._id,
+        userAgent: utilities.USER_AGENT.Google,
+        role: utilities.SYS_ROLE.User,
+      },
+    });
+    await this.tokenRepository.create({
+      userId: user._id,
+      token: newRefreshToken,
+      type: utilities.TOKEN_TYPE.Refresh,
+    });
+    return res.status(200).json({
+      message: "Token generated successfully",
+      success: true,
+      data: { accessToken, refreshToken: newRefreshToken },
+    });
+  };
+
+  logout = async (req: Request, res: Response) => {
+    const token = req.headers.authorization;
+    const userExist = req.user;
+    if (!userExist) {
+      throw new utilities.NotFoundException("User not found");
+    }
+    await this.tokenRepository.create({
+      userId: userExist._id,
+      token: token as string,
+      type: utilities.TOKEN_TYPE.Access,
+    });
+    return res.status(200).json({
+      message: "User logged out successfully",
       success: true,
     });
   };

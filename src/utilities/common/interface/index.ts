@@ -1,6 +1,9 @@
-import { GENDER, SYS_ROLE, TOKEN_TYPE, USER_AGENT } from "../enum";
+import { JwtPayload } from "jsonwebtoken";
+import { GENDER, REACTION, SYS_ROLE, TOKEN_TYPE, USER_AGENT } from "../enum";
+import { ObjectId } from "mongoose";
 
 export interface IUser {
+ readonly _id: ObjectId;
   firstName: string;
   lastName: string;
   fullName?: string;
@@ -16,8 +19,49 @@ export interface IUser {
   isVerified?: boolean;
 }
 
+export interface IReaction {
+  userId: ObjectId;
+  reaction: REACTION;
+}
+
+export interface IAttachment {
+  id: string;
+  url: string;
+}
+
+export interface IPost {
+ readonly _id: ObjectId;
+  userId: ObjectId;
+  content: string;
+  reactions: IReaction[];
+  attachments?: IAttachment[];
+}
+
+export interface IComment {
+ readonly _id: ObjectId;
+  userId: ObjectId;
+  postId: ObjectId;
+  parentIds: ObjectId[];
+  content: string;
+  attachments?: IAttachment[];
+  reactions: IReaction[];
+  mentions?: ObjectId[];
+}
+
 export interface IBlackListToken {
-  userId: string;
+  userId: ObjectId;
   token: string;
   type: TOKEN_TYPE;
+}
+
+export interface IPayload extends JwtPayload {
+ readonly _id: ObjectId;
+  userAgent: USER_AGENT;
+  role: SYS_ROLE;
+}
+
+declare module "express" {
+  interface Request {
+    user: IUser;
+  }
 }

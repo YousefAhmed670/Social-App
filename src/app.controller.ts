@@ -1,12 +1,14 @@
 import { NextFunction, Request, Response, type Express } from "express";
-import { authRouter, userRouter } from "./module";
+import { connectDB } from "./DB";
+import { authRouter, commentRouter, postRouter, userRouter } from "./module";
 import { AppError } from "./utilities";
-import {connectDB} from "./DB";
 export function bootstrap(app: Express, express: any) {
   connectDB();
   app.use(express.json());
   app.use("/auth", authRouter);
   app.use("/user", userRouter);
+  app.use("/post", postRouter);
+  app.use("/comment", commentRouter);
 
   app.use("/{*dummy}", (req, res, next) => {
     return res.status(404).json({ message: "Not Found", success: false });

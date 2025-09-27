@@ -15,3 +15,11 @@ export enum TOKEN_TYPE {
   Access,
   Refresh,
 }
+export enum REACTION {
+  Like,
+  Love,
+  Haha,
+  Wow,
+  Sad,
+  Angry,
+}
