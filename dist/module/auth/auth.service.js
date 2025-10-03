@@ -111,6 +111,22 @@ class AuthService {
         if (!userExist.isVerified) {
             throw new utilities.BadRequestException("User not verified");
         }
+        // Check if 2-step verification is enabled
+        if (userExist.twoStepVerificationEnabled) {
+            const OTP = utilities.generateOTP();
+            const otpExpireAt = utilities.generateExpiryTime(10);
+            const hashedOTP = await utilities.generateHash(OTP);
+            await this.userRepository.update({ email: loginDTO.email }, { otp: hashedOTP, otpExpireAt });
+            utilities.eventEmitter.emit("sendOTP", {
+                email: userExist.email,
+                otp: OTP,
+            });
+            return res.status(200).json({
+                message: "2-step verification required. OTP sent to your email",
+                success: true,
+                data: { requiresTwoFactor: true },
+            });
+        }
         const accessToken = utilities.generateToken({
             payload: {
                 _id: userExist._id,
@@ -183,6 +199,51 @@ class AuthService {
             message: "Token generated successfully",
             success: true,
             data: { accessToken, refreshToken: newRefreshToken },
+        });
+    };
+    verify2StepLogin = async (req, res) => {
+        const { email, otp } = req.body;
+        const userExist = await this.userRepository.exists({ email });
+        if (!userExist) {
+            throw new utilities.NotFoundException("User not found");
+        }
+        if (!userExist.twoStepVerificationEnabled) {
+            throw new utilities.BadRequestException("2-step verification is not enabled for this account");
+        }
+        if (!userExist.otp || !userExist.otpExpireAt) {
+            throw new utilities.BadRequestException("No OTP found. Please login again");
+        }
+        if (userExist.otpExpireAt.getTime() < Date.now()) {
+            throw new utilities.BadRequestException("OTP has expired. Please login again");
+        }
+        const isOTPValid = await utilities.compareHash(otp, userExist.otp);
+        if (!isOTPValid) {
+            throw new utilities.BadRequestException("Invalid OTP");
+        }
+        await this.userRepository.update({ email }, { $unset: { otp: "", otpExpireAt: "" } });
+        const accessToken = utilities.generateToken({
+            payload: {
+                _id: userExist._id,
+                userAgent: userExist.userAgent,
+                role: userExist.role,
+            },
+        });
+        const refreshToken = utilities.generateRefreshToken({
+            payload: {
+                _id: userExist._id,
+                userAgent: userExist.userAgent,
+                role: userExist.role,
+            },
+        });
+        await this.tokenRepository.create({
+            userId: userExist._id,
+            token: refreshToken,
+            type: utilities.TOKEN_TYPE.Refresh,
+        });
+        return res.status(200).json({
+            message: "2-step verification successful. User logged in",
+            success: true,
+            data: { accessToken, refreshToken },
         });
     };
     logout = async (req, res) => {

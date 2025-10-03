@@ -55,6 +55,8 @@ const userSchema = new Schema<IUser>(
     otp: String,
     otpExpireAt: Date,
     isVerified: { type: Boolean, default: false },
+    twoStepVerificationEnabled: { type: Boolean, default: false },
+    twoStepVerificationSecret: String,
   },
   { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
 );
@@ -67,6 +69,11 @@ userSchema
     this.firstName = value.split(" ")[0] as string;
     this.lastName = value.split(" ")[1] as string;
   });
+userSchema.virtual("posts", {
+  ref: "Post",
+  localField: "_id",
+  foreignField: "userId",
+});
 
 export default userSchema;
 

@@ -87,6 +87,8 @@ const userSchema = new mongoose_1.Schema({
     otp: String,
     otpExpireAt: Date,
     isVerified: { type: Boolean, default: false },
+    twoStepVerificationEnabled: { type: Boolean, default: false },
+    twoStepVerificationSecret: String,
 }, { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } });
 userSchema
     .virtual("fullName")
@@ -96,6 +98,11 @@ userSchema
     .set(function (value) {
     this.firstName = value.split(" ")[0];
     this.lastName = value.split(" ")[1];
+});
+userSchema.virtual("posts", {
+    ref: "Post",
+    localField: "_id",
+    foreignField: "userId",
 });
 exports.default = userSchema;
 userSchema.pre("save", async function (next) {

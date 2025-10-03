@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const DB_1 = require("../../DB");
 const utilities_1 = require("../../utilities");
-const factory_1 = __importDefault(require("./factory"));
 const react_provider_1 = require("../../utilities/common/provider/react.provider");
+const factory_1 = __importDefault(require("./factory"));
 class CommentService {
     postRepository = new DB_1.PostRepository();
     commentRepository = new DB_1.CommentRepository();

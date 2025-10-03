@@ -21,5 +21,8 @@ class AbstractRepository {
     async delete(filter) {
         return await this.model.deleteOne(filter);
     }
+    async deleteMany(filter) {
+        return await this.model.deleteMany(filter);
+    }
 }
 exports.default = AbstractRepository;

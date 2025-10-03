@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const factory_1 = __importDefault(require("./factory"));
-const utilities_1 = require("../../utilities");
 const DB_1 = require("../../DB");
+const utilities_1 = require("../../utilities");
 const react_provider_1 = require("../../utilities/common/provider/react.provider");
+const factory_1 = __importDefault(require("./factory"));
 class PostService {
     postRepository = new DB_1.PostRepository();
     postFactoryService = new factory_1.default();

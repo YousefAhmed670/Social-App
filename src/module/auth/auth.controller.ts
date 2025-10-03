@@ -1,8 +1,7 @@
 import { Router } from "express";
+import { isAuthenticated, isValid } from "../../middleware";
 import authService from "./auth.service";
 import * as authValidation from "./auth.validation";
-import { isValid } from "../../middleware";
-import { isAuthenticated } from "../../middleware/auth.middleware";
 const router = Router();
 
 router.post(
@@ -11,6 +10,11 @@ router.post(
   authService.register
 );
 router.post("/login", isValid(authValidation.loginSchema), authService.login);
+router.post(
+  "/verify-2Step-login",
+  isValid(authValidation.verify2StepLoginSchema),
+  authService.verify2StepLogin
+);
 router.post("/send-otp", authService.sendOTP);
 router.post(
   "/verify-email",
@@ -23,5 +27,5 @@ router.put(
   authService.resetPassword
 );
 router.post("/refresh-token", authService.refreshToken);
-router.put("/logout",isAuthenticated, authService.logout);
+router.put("/logout", isAuthenticated, authService.logout);
 export default router;

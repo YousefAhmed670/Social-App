@@ -17,6 +17,8 @@ export interface IUser {
   otp?: string;
   otpExpireAt?: Date;
   isVerified?: boolean;
+  twoStepVerificationEnabled?: boolean;
+  twoStepVerificationSecret?: string;
 }
 
 export interface IReaction {
