@@ -26,6 +26,10 @@ export interface Verify2StepDTO {
   otp: string;
 }
 
+export interface Disable2StepRequestDTO {
+  password: string;
+}
+
 export interface Disable2StepDTO {
   password: string;
   otp: string;

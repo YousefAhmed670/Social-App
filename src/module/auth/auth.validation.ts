@@ -29,5 +29,5 @@ export const resetPasswordSchema = z.object<ResetPasswordDTO>({
 
 export const verify2StepLoginSchema = z.object<Verify2StepLoginDTO>({
     email: z.email() as unknown as string,
-    otp: z.string().min(6).max(6) as unknown as string,
+    secret: z.string().min(6).max(6) as unknown as string,
 });

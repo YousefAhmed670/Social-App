@@ -2,6 +2,7 @@ import { z } from "zod";
 import { GENDER } from "../../utilities";
 import {
   Disable2StepDTO,
+  Disable2StepRequestDTO,
   Request2StepDTO,
   UpdateBasicInfoDTO,
   UpdateEmailDTO,
@@ -33,6 +34,10 @@ export const request2StepSchema = z.object<Request2StepDTO>({
 
 export const verify2StepSchema = z.object<Verify2StepDTO>({
   otp: z.string().length(6, "OTP must be 6 digits") as unknown as string,
+});
+
+export const disable2StepRequestSchema = z.object<Disable2StepRequestDTO>({
+  password: z.string().min(6, "Password must be at least 6 characters") as unknown as string,
 });
 
 export const disable2StepSchema = z.object<Disable2StepDTO>({

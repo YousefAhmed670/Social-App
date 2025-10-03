@@ -26,5 +26,5 @@ exports.resetPasswordSchema = zod_1.z.object({
 });
 exports.verify2StepLoginSchema = zod_1.z.object({
     email: zod_1.z.email(),
-    otp: zod_1.z.string().min(6).max(6),
+    secret: zod_1.z.string().min(6).max(6),
 });

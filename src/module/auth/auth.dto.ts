@@ -27,5 +27,5 @@ export interface ResetPasswordDTO {
 
 export interface Verify2StepLoginDTO {
   email: string;
-  otp: string;
+  secret: string;
 }

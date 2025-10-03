@@ -3,6 +3,7 @@ import { TokenRepository, UserRepository } from "../../DB";
 import * as utilities from "../../utilities";
 import {
   Disable2StepDTO,
+  Disable2StepRequestDTO,
   Request2StepDTO,
   UpdateBasicInfoDTO,
   UpdateEmailDTO,
@@ -192,7 +193,7 @@ class UserService {
     const hashedOTP = await utilities.generateHash(OTP);
     await this.userRepository.update(
       { _id: user._id },
-      { twoStepVerificationSecret: hashedOTP, otp: hashedOTP, otpExpireAt }
+      { otp: hashedOTP, otpExpireAt }
     );
     utilities.eventEmitter.emit("sendOTP", {
       email: user.email,
@@ -205,7 +206,7 @@ class UserService {
     });
   };
 
-  verify2StepVerification = async (req: Request, res: Response) => {
+  enable2StepVerification = async (req: Request, res: Response) => {
     const { otp }: Verify2StepDTO = req.body;
     const user = req.user;
     if (!user.otp || !user.otpExpireAt) {
@@ -220,15 +221,49 @@ class UserService {
     if (!isOTPValid) {
       throw new utilities.BadRequestException("Invalid OTP");
     }
+    const Secret = utilities.generateOTP();
+    const twoStepVerificationSecret = await utilities.generateHash(Secret);
     await this.userRepository.update(
       { _id: user._id },
       {
         twoStepVerificationEnabled: true,
+        twoStepVerificationSecret,
         $unset: { otp: "", otpExpireAt: "" },
       }
     );
     return res.status(200).json({
       message: "Two-step verification enabled successfully",
+      success: true,
+      data: { "2-Step-Verification-Secret": Secret },
+    });
+  };
+
+  disable2StepVerificationRequest = async (req: Request, res: Response) => {
+    const { password }: Disable2StepRequestDTO = req.body;
+    const user = req.user;
+    if (!user.password) {
+      throw new utilities.BadRequestException(
+        "Cannot disable 2-step verification for social login users"
+      );
+    }
+    const isPasswordValid = await utilities.compareHash(password, user.password);
+    if (!isPasswordValid) {
+      throw new utilities.BadRequestException("Invalid password");
+    }
+    const OTP = utilities.generateOTP();
+    const otpExpireAt = utilities.generateExpiryTime(10);
+    const hashedOTP = await utilities.generateHash(OTP);
+    await this.userRepository.update(
+      { _id: user._id },
+      { otp: hashedOTP, otpExpireAt }
+    );
+    utilities.eventEmitter.emit("sendOTP", {
+      email: user.email,
+      otp: OTP,
+    });
+    return res.status(200).json({
+      message:
+        "OTP sent to your email. Please verify to disable 2-step verification",
       success: true,
     });
   };

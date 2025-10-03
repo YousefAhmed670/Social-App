@@ -203,7 +203,7 @@ class AuthService {
   };
 
   verify2StepLogin = async (req: Request, res: Response) => {
-    const { email, otp }: Verify2StepLoginDTO = req.body;
+    const { email, secret }: Verify2StepLoginDTO = req.body;
     const userExist = await this.userRepository.exists({ email });
     if (!userExist) {
       throw new utilities.NotFoundException("User not found");
@@ -211,20 +211,10 @@ class AuthService {
     if (!userExist.twoStepVerificationEnabled) {
       throw new utilities.BadRequestException("2-step verification is not enabled for this account");
     }
-    if (!userExist.otp || !userExist.otpExpireAt) {
-      throw new utilities.BadRequestException("No OTP found. Please login again");
-    }
-    if (userExist.otpExpireAt.getTime() < Date.now()) {
-      throw new utilities.BadRequestException("OTP has expired. Please login again");
-    }
-    const isOTPValid = await utilities.compareHash(otp, userExist.otp);
+    const isOTPValid = await utilities.compareHash(secret, userExist.twoStepVerificationSecret!);
     if (!isOTPValid) {
       throw new utilities.BadRequestException("Invalid OTP");
     }
-    await this.userRepository.update(
-      { email },
-      { $unset: { otp: "", otpExpireAt: "" } }
-    );
     const accessToken = utilities.generateToken({
       payload: {
         _id: userExist._id,

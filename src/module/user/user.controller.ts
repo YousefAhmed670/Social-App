@@ -18,7 +18,7 @@ router.patch(
   isValid(userValidation.updateBasicInfoSchema),
   userService.updateBasicInfo
 );
-router.post("/email/request", isAuthenticated, userService.requestEmailUpdate);
+router.post("/email-request", isAuthenticated, userService.requestEmailUpdate);
 router.patch(
   "/email",
   isAuthenticated,
@@ -32,10 +32,16 @@ router.post(
   userService.request2StepVerification
 );
 router.post(
-  "/2StepVerify/verify",
+  "/2StepVerify/enable",
   isAuthenticated,
   isValid(userValidation.verify2StepSchema),
-  userService.verify2StepVerification
+  userService.enable2StepVerification
+);
+router.post(
+  "/2StepVerify/disable-request",
+  isAuthenticated,
+  isValid(userValidation.disable2StepRequestSchema),
+  userService.disable2StepVerificationRequest
 );
 router.post(
   "/2StepVerify/disable",
