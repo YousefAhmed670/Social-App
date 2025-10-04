@@ -246,7 +246,10 @@ class UserService {
         "Cannot disable 2-step verification for social login users"
       );
     }
-    const isPasswordValid = await utilities.compareHash(password, user.password);
+    const isPasswordValid = await utilities.compareHash(
+      password,
+      user.password
+    );
     if (!isPasswordValid) {
       throw new utilities.BadRequestException("Invalid password");
     }
