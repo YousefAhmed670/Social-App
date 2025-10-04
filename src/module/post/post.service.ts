@@ -53,7 +53,7 @@ class PostService {
           },
           {
             path: "comments",
-            match: { parentIds: [] },
+            match: { parentId: null },
             populate: [
               {
                 path: "userId",
@@ -74,20 +74,23 @@ class PostService {
     });
   };
 
-  delete = async (req: Request, res: Response) => {
+  deletePost = async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = req.user;
-    const post = await this.postRepository.exists({ _id: id });
-    if (!post) {
+    const postExists = await this.postRepository.exists({ _id: id });
+    if (!postExists) {
       throw new NotFoundException("Post not found");
     }
-    if (post.userId.toString() !== user._id.toString()) {
+    if (postExists.userId.toString() !== user._id.toString()) {
       throw new UnauthorizedException(
         "You are not authorized to delete this post"
       );
     }
     await this.postRepository.delete({ _id: id });
-    return res.sendStatus(204);
+    return res.status(200).json({
+      message: "Post deleted successfully",
+      success: true,
+    });
   };
 }
 

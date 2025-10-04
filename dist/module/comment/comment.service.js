@@ -41,5 +41,50 @@ class CommentService {
         await (0, react_provider_1.ReactProvider)(this.commentRepository, id, reaction, userId.toString(), "Comment");
         return res.sendStatus(204);
     };
+    getSpecific = async (req, res) => {
+        const { id } = req.params;
+        const commentExists = await this.commentRepository.exists({ _id: id }, {}, {
+            populate: [
+                {
+                    path: "replies",
+                    select: "userId postId parentId content reactions",
+                    populate: [
+                        {
+                            path: "userId",
+                            select: "fullName firstName lastName",
+                        },
+                    ],
+                },
+            ],
+        });
+        if (!commentExists) {
+            throw new utilities_1.NotFoundException("Comment not found");
+        }
+        res.status(200).json({
+            message: "Comment found successfully",
+            success: true,
+            data: { commentExists },
+        });
+    };
+    deleteComment = async (req, res) => {
+        const { id } = req.params;
+        const user = req.user;
+        const commentExists = await this.commentRepository.exists({ _id: id }, {}, {
+            populate: [{ path: "postId", select: "userId" }],
+        });
+        if (!commentExists) {
+            throw new utilities_1.NotFoundException("Comment not found");
+        }
+        if (commentExists.userId.toString() !== user._id.toString() &&
+            commentExists.postId.userId.toString() !==
+                user._id.toString()) {
+            throw new utilities_1.UnauthorizedException("You are not authorized to delete this comment");
+        }
+        await this.commentRepository.delete({ _id: id });
+        res.status(200).json({
+            message: "Comment deleted successfully",
+            success: true,
+        });
+    };
 }
 exports.default = new CommentService();

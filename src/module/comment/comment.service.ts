@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { CommentRepository, PostRepository } from "../../DB";
-import { NotFoundException } from "../../utilities";
+import {
+  IPost,
+  NotFoundException,
+  UnauthorizedException,
+} from "../../utilities";
 import { ReactProvider } from "../../utilities/common/provider/react.provider";
 import { createCommentDto } from "./comment.dto";
 import CommentFactoryService from "./factory";
@@ -51,6 +55,65 @@ class CommentService {
       "Comment"
     );
     return res.sendStatus(204);
+  };
+
+  getSpecific = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const commentExists = await this.commentRepository.exists(
+      { _id: id },
+      {},
+      {
+        populate: [
+          {
+            path: "replies",
+            select: "userId postId parentId content reactions",
+            populate: [
+              {
+                path: "userId",
+                select: "fullName firstName lastName",
+              },
+            ],
+          },
+        ],
+      }
+    );
+    if (!commentExists) {
+      throw new NotFoundException("Comment not found");
+    }
+    res.status(200).json({
+      message: "Comment found successfully",
+      success: true,
+      data: { commentExists },
+    });
+  };
+
+  deleteComment = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = req.user;
+    const commentExists = await this.commentRepository.exists(
+      { _id: id },
+      {},
+      {
+        populate: [{ path: "postId", select: "userId" }],
+      }
+    );
+    if (!commentExists) {
+      throw new NotFoundException("Comment not found");
+    }
+    if (
+      commentExists.userId.toString() !== user._id.toString() &&
+      (commentExists.postId as unknown as IPost).userId.toString() !==
+        user._id.toString()
+    ) {
+      throw new UnauthorizedException(
+        "You are not authorized to delete this comment"
+      );
+    }
+    await this.commentRepository.delete({ _id: id });
+    res.status(200).json({
+      message: "Comment deleted successfully",
+      success: true,
+    });
   };
 }
 

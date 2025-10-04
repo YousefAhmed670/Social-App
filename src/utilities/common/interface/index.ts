@@ -1,9 +1,9 @@
 import { JwtPayload } from "jsonwebtoken";
-import { GENDER, REACTION, SYS_ROLE, TOKEN_TYPE, USER_AGENT } from "../enum";
 import { ObjectId } from "mongoose";
+import { GENDER, REACTION, SYS_ROLE, TOKEN_TYPE, USER_AGENT } from "../enum";
 
 export interface IUser {
- readonly _id: ObjectId;
+  readonly _id: ObjectId;
   firstName: string;
   lastName: string;
   fullName?: string;
@@ -32,7 +32,7 @@ export interface IAttachment {
 }
 
 export interface IPost {
- readonly _id: ObjectId;
+  readonly _id: ObjectId;
   userId: ObjectId;
   content: string;
   reactions: IReaction[];
@@ -40,10 +40,10 @@ export interface IPost {
 }
 
 export interface IComment {
- readonly _id: ObjectId;
+  readonly _id: ObjectId;
   userId: ObjectId;
   postId: ObjectId;
-  parentIds: ObjectId[];
+  parentId: ObjectId | null;
   content: string;
   attachments?: IAttachment[];
   reactions: IReaction[];
@@ -57,7 +57,7 @@ export interface IBlackListToken {
 }
 
 export interface IPayload extends JwtPayload {
- readonly _id: ObjectId;
+  readonly _id: ObjectId;
   userAgent: USER_AGENT;
   role: SYS_ROLE;
 }

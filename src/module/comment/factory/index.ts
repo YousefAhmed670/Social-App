@@ -11,9 +11,9 @@ export default class CommentFactoryService {
   ) => {
     const newComment = new Comment();
     newComment.userId = user._id;
-    newComment.postId = post._id;
+    newComment.postId = post._id || comment!.postId;
     newComment.content = createCommentDto.content;
-    newComment.parentIds = comment ? [...comment.parentIds, comment._id] : [];
+    newComment.parentId = comment?._id || null;
     newComment.reactions = [];
     newComment.mentions = [];
     return newComment;
